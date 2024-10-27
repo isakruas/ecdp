@@ -2,7 +2,7 @@
 
 
 
-CFRG (Crypto Forum Research Group)                               I. Ruas
+Crypto Forum                                                     I. Ruas
 Internet-Draft                                                   Nrolabs
 Intended status: Standards Track                         27 October 2024
 Expires: 30 April 2025
@@ -26,13 +26,13 @@ About This Document
    This note is to be removed before publishing as an RFC.
 
    The latest revision of this draft can be found at
-   https://datatracker.ietf.org/doc/draft-ruas-ecdp/.  Status
+   https://isakruas.github.io/ecdp/draft-ruas-cfrg-ecdp.html.  Status
    information for this document may be found at
    https://datatracker.ietf.org/doc/draft-ruas-cfrg-ecdp/.
 
-   Discussion of this document takes place on the CFRG Working Group
-   mailing list (mailto:cfrg@ietf.org), which is archived at
-   https://www.ietf.org/mailman/listinfo/cfrg.  Subscribe at
+   Discussion of this document takes place on the Crypto Forum Research
+   Group mailing list (mailto:cfrg@ietf.org), which is archived at
+   https://mailarchive.ietf.org/arch/browse/cfrg.  Subscribe at
    https://www.ietf.org/mailman/listinfo/cfrg/.
 
    Source for this draft and an issue tracker can be found at
