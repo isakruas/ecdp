@@ -9,8 +9,8 @@ number:
 date:
 consensus: true
 v: 3
-area: Security
-workgroup: CFRG (Crypto Forum Research Group)
+area: "IRTF"
+workgroup: "Crypto Forum"
 keyword:
  - peer-to-peer
  - encryption
@@ -18,12 +18,12 @@ keyword:
  - data protocol
 
 venue:
-  group: CFRG
-  type: Working Group
-  mail: cfrg@ietf.org
-  arch: https://www.ietf.org/mailman/listinfo/cfrg
-  github: isakruas/ecdp
-  latest: https://datatracker.ietf.org/doc/draft-ruas-ecdp/
+  group: "Crypto Forum"
+  type: "Research Group"
+  mail: "cfrg@ietf.org"
+  arch: "https://mailarchive.ietf.org/arch/browse/cfrg"
+  github: "isakruas/ecdp"
+  latest: "https://isakruas.github.io/ecdp/draft-ruas-cfrg-ecdp.html"
 
 author:
   -
