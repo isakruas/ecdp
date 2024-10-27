@@ -1,0 +1,7 @@
+.refcache
+venv
+.gems
+node_modules
+draft-*.html
+draft-*.txt
+draft-*.xml
