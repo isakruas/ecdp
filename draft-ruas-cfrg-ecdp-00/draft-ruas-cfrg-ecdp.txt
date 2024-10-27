@@ -1,0 +1,319 @@
+
+
+
+
+Crypto Forum                                                     I. Ruas
+Internet-Draft                                                   Nrolabs
+Intended status: Standards Track                         27 October 2024
+Expires: 30 April 2025
+
+
+                   ECDP: Elliptic Curve Data Protocol
+                      draft-ruas-cfrg-ecdp-latest
+
+Abstract
+
+   This document specifies the Elliptic Curve Data Protocol (ECDP), a
+   peer-to-peer (P2P) communication protocol tailored for decentralized
+   networks.  ECDP utilizes elliptic curve cryptography (ECC) for
+   encryption, employs the Elliptic Curve Digital Signature Algorithm
+   (ECDSA) for message authentication, and leverages the Diffie-Hellman
+   key exchange using elliptic curves for secure session initialization.
+   The protocol is designed to operate over both TCP and UDP.
+
+About This Document
+
+   This note is to be removed before publishing as an RFC.
+
+   The latest revision of this draft can be found at
+   https://isakruas.github.io/ecdp/draft-ruas-cfrg-ecdp.html.  Status
+   information for this document may be found at
+   https://datatracker.ietf.org/doc/draft-ruas-cfrg-ecdp/.
+
+   Discussion of this document takes place on the Crypto Forum Research
+   Group mailing list (mailto:cfrg@ietf.org), which is archived at
+   https://mailarchive.ietf.org/arch/browse/cfrg.  Subscribe at
+   https://www.ietf.org/mailman/listinfo/cfrg/.
+
+   Source for this draft and an issue tracker can be found at
+   https://github.com/isakruas/ecdp.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 30 April 2025.
+
+Copyright Notice
+
+   Copyright (c) 2024 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+Table of Contents
+
+   1.  Introduction
+   2.  Terminology
+   3.  Goals of the Protocol
+   4.  Protocol Operation
+     4.1.  Message Types
+   5.  Message Structure
+     5.1.  5.1 Base Message Structure
+     5.2.  5.2 Handshake (0x01)
+     5.3.  5.3 Data Transfer (0x02)
+     5.4.  5.4 Acknowledgment (Ack) (0x03)
+     5.5.  5.5 Data Request (0x04)
+   6.  Security Considerations
+     6.1.  Additional Recommendations
+   7.  IANA Considerations
+   8.  Normative References
+   Acknowledgments
+   Author's Address
+
+1.  Introduction
+
+   P2P networks are widely used for data exchange but often face
+   challenges related to security and data integrity.  ECDP addresses
+   these issues by implementing strong cryptographic measures and robust
+   authentication mechanisms.  ECDP is designed for scalability and
+   security by enabling nodes to communicate indirectly through a
+   network pool.
+
+2.  Terminology
+
+   The key words *"MUST"*, *"MUST NOT"*, *"REQUIRED"*, *"SHALL"*,
+   *"SHALL NOT"*, *"SHOULD"*, *"SHOULD NOT"*, *"RECOMMENDED"*, *"MAY"*,
+   and *"OPTIONAL"* in this document are to be interpreted as described
+   in [RFC2119].
+
+3.  Goals of the Protocol
+
+   *  The protocol *MUST* facilitate secure communication between nodes
+      through a pool network.
+
+   *  The protocol *MUST* ensure data integrity and confidentiality of
+      the messages transmitted.
+
+   *  The protocol *MUST* authenticate messages, ensuring their origin
+      and integrity.
+
+4.  Protocol Operation
+
+4.1.  Message Types
+
+   *  *0x01:* Handshake
+
+   *  *0x02:* Data Transfer
+
+   *  *0x03:* Acknowledgment (Ack)
+
+   *  *0x04:* Data Request
+
+5.  Message Structure
+
+5.1.  5.1 Base Message Structure
+
+   The base structure contains fields that are common across various
+   message types, with extensions for specific needs.  Messages are
+   routed through a pool network to enhance scalability and security.
+
+     +==================+=============================+==============+
+     | Field            | Description                 | Size (bytes) |
+     +==================+=============================+==============+
+     | Protocol Version | Identifies the version of   | 1            |
+     |                  | the ECDP protocol           |              |
+     +------------------+-----------------------------+--------------+
+     | Message Type     | Indicates the type of       | 1            |
+     |                  | message                     |              |
+     +------------------+-----------------------------+--------------+
+     | Sender ECC       | Public key of the sending   | 64 (2x32)    |
+     | Public Key       | node                        |              |
+     +------------------+-----------------------------+--------------+
+     | Receiver ECC     | Public key of the receiving | 64 (2x32)    |
+     | Public Key       | node (if applicable)        |              |
+     +------------------+-----------------------------+--------------+
+     | Nonce            | Random number to prevent    | 8            |
+     |                  | replay attacks              |              |
+     +------------------+-----------------------------+--------------+
+     | Encrypted Data   | Content of the message      | Variable     |
+     |                  | encrypted using ECC         |              |
+     +------------------+-----------------------------+--------------+
+     | Signature        | Digital signature of the    | 64           |
+     |                  | sender (ECDSA)              |              |
+     +------------------+-----------------------------+--------------+
+
+                                  Table 1
+
+5.2.  5.2 Handshake (0x01)
+
+    +==================+==============================+==============+
+    | Field            | Description                  | Size (bytes) |
+    +==================+==============================+==============+
+    | Protocol Version | Identifies the version of    | 1            |
+    |                  | the ECDP protocol            |              |
+    +------------------+------------------------------+--------------+
+    | Message Type     | Set to Handshake (0x01)      | 1            |
+    +------------------+------------------------------+--------------+
+    | Sender ECC       | Public key of the sending    | 64 (2x32)    |
+    | Public Key       | node                         |              |
+    +------------------+------------------------------+--------------+
+    | Receiver ECC     | Public key of the receiving  | 64 (2x32)    |
+    | Public Key       | node                         |              |
+    +------------------+------------------------------+--------------+
+    | Nonce            | Random number to prevent     | 8            |
+    |                  | session replay               |              |
+    +------------------+------------------------------+--------------+
+    | Node Identifier  | Unique ID of the node (e.g., | 32           |
+    |                  | hash of the public key)      |              |
+    +------------------+------------------------------+--------------+
+    | Node Capability  | Information about bandwidth  | 4            |
+    |                  | and supported data types     |              |
+    +------------------+------------------------------+--------------+
+    | Signature        | Digital signature of the     | 64           |
+    |                  | sender (ECDSA)               |              |
+    +------------------+------------------------------+--------------+
+
+                                 Table 2
+
+5.3.  5.3 Data Transfer (0x02)
+
+     +==================+=============================+==============+
+     | Field            | Description                 | Size (bytes) |
+     +==================+=============================+==============+
+     | Protocol Version | Identifies the version of   | 1            |
+     |                  | the ECDP protocol           |              |
+     +------------------+-----------------------------+--------------+
+     | Message Type     | Set to Data Transfer (0x02) | 1            |
+     +------------------+-----------------------------+--------------+
+     | Sender ECC       | Public key of the sending   | 64 (2x32)    |
+     | Public Key       | node                        |              |
+     +------------------+-----------------------------+--------------+
+     | Receiver ECC     | Public key of the receiving | 64 (2x32)    |
+     | Public Key       | node                        |              |
+     +------------------+-----------------------------+--------------+
+     | Nonce            | Exclusive random number for | 8            |
+     |                  | the session                 |              |
+     +------------------+-----------------------------+--------------+
+     | Encrypted Data   | Message content encrypted   | Variable     |
+     |                  | using ECC                   |              |
+     +------------------+-----------------------------+--------------+
+     | Checksum         | Cryptographic hash for data | 32           |
+     |                  | integrity verification      |              |
+     +------------------+-----------------------------+--------------+
+     | Signature        | Digital signature of the    | 64           |
+     |                  | sender (ECDSA)              |              |
+     +------------------+-----------------------------+--------------+
+
+                                  Table 3
+
+5.4.  5.4 Acknowledgment (Ack) (0x03)
+
+     +==================+=============================+==============+
+     | Field            | Description                 | Size (bytes) |
+     +==================+=============================+==============+
+     | Protocol Version | Identifies the version of   | 1            |
+     |                  | the ECDP protocol           |              |
+     +------------------+-----------------------------+--------------+
+     | Message Type     | Set to Acknowledgment       | 1            |
+     |                  | (0x03)                      |              |
+     +------------------+-----------------------------+--------------+
+     | Nonce            | Random number corresponding | 8            |
+     |                  | to the session              |              |
+     +------------------+-----------------------------+--------------+
+     | Message Hash     | Hash of the received data   | 32           |
+     |                  | message                     |              |
+     +------------------+-----------------------------+--------------+
+     | Status           | Indicates Success (0x00) or | 1            |
+     |                  | Error (0x01)                |              |
+     +------------------+-----------------------------+--------------+
+
+                                  Table 4
+
+5.5.  5.5 Data Request (0x04)
+
+       +==================+========================+==============+
+       | Field            | Description            | Size (bytes) |
+       +==================+========================+==============+
+       | Protocol Version | Identifies the version | 1            |
+       |                  | of the ECDP protocol   |              |
+       +------------------+------------------------+--------------+
+       | Message Type     | Set to Data Request    | 1            |
+       |                  | (0x04)                 |              |
+       +------------------+------------------------+--------------+
+       | Sender ECC       | Public key of the      | 64 (2x32)    |
+       | Public Key       | requesting node        |              |
+       +------------------+------------------------+--------------+
+       | Receiver ECC     | Public key of the      | 64 (2x32)    |
+       | Public Key       | data-holding node      |              |
+       +------------------+------------------------+--------------+
+       | Nonce            | Random number for the  | 8            |
+       |                  | session                |              |
+       +------------------+------------------------+--------------+
+       | Data Identifier  | Unique hash or ID of   | 32           |
+       |                  | the requested data     |              |
+       +------------------+------------------------+--------------+
+       | Signature        | Digital signature of   | 64           |
+       |                  | the sender (ECDSA)     |              |
+       +------------------+------------------------+--------------+
+
+                                 Table 5
+
+6.  Security Considerations
+
+   ECDP employs ECC for secure communication between nodes, with
+   messages authenticated through ECDSA.  Nonces are used to prevent
+   replay attacks.  The protocol uses the Diffie-Hellman key exchange
+   over elliptic curves for secure session initialization.
+
+6.1.  Additional Recommendations
+
+   *  Implementations *SHOULD* regularly update their cryptographic
+      libraries to maintain security.
+
+   *  Nodes *MUST* verify the signatures of incoming messages to ensure
+      authenticity.
+
+   *  It is *RECOMMENDED* that nodes securely store their private keys
+      to prevent unauthorized access.
+
+7.  IANA Considerations
+
+   This document has no actions directed at IANA.
+
+8.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/rfc/rfc2119>.
+
+Acknowledgments
+
+   The authors acknowledge the valuable contributions of cryptographic
+   and P2P networking experts.
+
+Author's Address
+
+   Isak Ruas
+   Nrolabs
+   Brazil
+   Email: isakruas@nrolabs.com
