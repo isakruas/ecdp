@@ -37,7 +37,7 @@ normative:
 
 --- abstract
 
-This document specifies the Elliptic Curve Data Protocol (ECDP), a peer-to-peer (P2P) communication protocol tailored for decentralized networks. ECDP utilizes elliptic curve cryptography (ECC) for encryption, employs the Elliptic Curve Digital Signature Algorithm (ECDSA) for message authentication, and leverages the Diffie-Hellman key exchange using elliptic curves for secure session initialization. The protocol is designed to operate over both TCP and UDP.
+This document specifies the Elliptic Curve Data Protocol (ECDP), a peer-to-peer (P2P) communication protocol tailored for decentralized networks. ECDP utilizes elliptic curve cryptography (ECC) for encryption, employs the Elliptic Curve Digital Signature Algorithm (ECDSA) for message authentication, and leverages the Diffie-Hellman key exchange using elliptic curves for secure session initialization. The protocol is designed to operate over both TCP and UDP. 
 
 --- middle
 
