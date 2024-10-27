@@ -3,7 +3,7 @@ title: "ECDP: Elliptic Curve Data Protocol"
 abbrev: "ECDP"
 category: std
 
-docname: draft-ruas-ecdp-00
+docname: draft-ruas-cfrg-ecdp-latest
 submissiontype: IETF
 number:
 date:
