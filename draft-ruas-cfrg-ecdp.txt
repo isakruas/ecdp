@@ -19,7 +19,10 @@ Abstract
    encryption, employs the Elliptic Curve Digital Signature Algorithm
    (ECDSA) for message authentication, and leverages the Diffie-Hellman
    key exchange using elliptic curves for secure session initialization.
-   The protocol is designed to operate over both TCP and UDP.
+   The protocol supports a variety of elliptic curves (e.g., secp256k1,
+   secp384r1) with varying key sizes, and is designed to operate over
+   both TCP and UDP.  Additionally, it utilizes SHA-256 or SHA-512 for
+   cryptographic hash verification to ensure message integrity.
 
 About This Document
 
@@ -74,18 +77,22 @@ Table of Contents
    1.  Introduction
    2.  Terminology
    3.  Goals of the Protocol
-   4.  Protocol Operation
-     4.1.  Message Types
-   5.  Message Structure
-     5.1.  5.1 Base Message Structure
-     5.2.  5.2 Handshake (0x01)
-     5.3.  5.3 Data Transfer (0x02)
-     5.4.  5.4 Acknowledgment (Ack) (0x03)
-     5.5.  5.5 Data Request (0x04)
-   6.  Security Considerations
-     6.1.  Additional Recommendations
-   7.  IANA Considerations
-   8.  Normative References
+   4.  Supported Algorithms
+     4.1.  4.1 Cryptography
+       4.1.1.  4.1.1 Supported Elliptic Curves
+       4.1.2.  4.1.2 Supported Cryptographic Hash Algorithms
+   5.  Protocol Operation
+     5.1.  Message Types
+   6.  Message Structure
+     6.1.  5.1 Base Message Structure
+     6.2.  5.2 Handshake (0x01)
+     6.3.  5.3 Data Transfer (0x02)
+     6.4.  5.4 Acknowledgment (Ack) (0x03)
+     6.5.  5.5 Data Request (0x04)
+   7.  Security Considerations
+     7.1.  Additional Recommendations
+   8.  IANA Considerations
+   9.  Normative References
    Acknowledgments
    Author's Address
 
@@ -97,6 +104,15 @@ Table of Contents
    authentication mechanisms.  ECDP is designed for scalability and
    security by enabling nodes to communicate indirectly through a
    network pool.
+
+   To enhance the security and integrity of the messages exchanged, the
+   protocol employs elliptic curve cryptography (ECC) with various well-
+   established curves, as well as the SHA-256 and SHA-512 algorithms for
+   cryptographic hash functions.
+
+   The protocol dynamically supports different ECC key lengths, ensuring
+   flexibility and forward compatibility with future developments in
+   elliptic curve cryptography.
 
 2.  Terminology
 
@@ -113,12 +129,69 @@ Table of Contents
    *  The protocol *MUST* ensure data integrity and confidentiality of
       the messages transmitted.
 
-   *  The protocol *MUST* authenticate messages, ensuring their origin
-      and integrity.
+   *  The protocol *MUST* authenticate messages using elliptic curve
+      signature schemes, ensuring their origin and integrity.
 
-4.  Protocol Operation
+   *  The protocol *MUST* be extensible and support future advances in
+      cryptographic techniques.
 
-4.1.  Message Types
+   *  The protocol *SHOULD* be scalable, able to operate in
+      decentralized large-scale P2P networks.
+
+   *  The protocol *MUST* support multiple key sizes for flexible
+      elliptic curve operations.
+
+4.  Supported Algorithms
+
+   ECDP relies on a variety of standardized and widely used algorithms
+   to ensure secure, authenticated, and efficient communication.
+
+4.1.  4.1 Cryptography
+
+4.1.1.  4.1.1 Supported Elliptic Curves
+
+   ECDP supports the following elliptic curves for encryption, Diffie-
+   Hellman key exchange, and signing operations (ECDSA):
+
+   *  *secp192k1*
+
+   *  *secp192r1*
+
+   *  *secp224k1*
+
+   *  *secp224r1*
+
+   *  *secp256k1*
+
+   *  *secp256r1*
+
+   *  *secp384r1*
+
+   *  *secp521r1*
+
+   Each curve corresponds to a distinct key size.  To accommodate
+   different security levels, the protocol includes a parameter for
+   indicating the key size used in message operations.  Implementations
+   *MUST* support *secp256k1*, *secp256r1*, and *secp384r1* as a minimum
+   requirement.  Support for other curves is *RECOMMENDED* for greater
+   flexibility and stronger cryptography when necessary.
+
+4.1.2.  4.1.2 Supported Cryptographic Hash Algorithms
+
+   ECDP uses cryptographic hash functions for various integrity checks,
+   including *checksums* and *digital signatures*.
+
+   Supported hash functions include:
+
+   *  *SHA-256* (RECOMMENDED)
+
+   *  *SHA-512* (OPTIONAL for longer data integrity verification)
+
+   Implementations *MUST* support *SHA-256* as a minimum requirement.
+
+5.  Protocol Operation
+
+5.1.  Message Types
 
    *  *0x01:* Handshake
 
@@ -128,42 +201,54 @@ Table of Contents
 
    *  *0x04:* Data Request
 
-5.  Message Structure
+6.  Message Structure
 
-5.1.  5.1 Base Message Structure
+6.1.  5.1 Base Message Structure
 
    The base structure contains fields that are common across various
    message types, with extensions for specific needs.  Messages are
    routed through a pool network to enhance scalability and security.
 
-     +==================+=============================+==============+
-     | Field            | Description                 | Size (bytes) |
-     +==================+=============================+==============+
-     | Protocol Version | Identifies the version of   | 1            |
-     |                  | the ECDP protocol           |              |
-     +------------------+-----------------------------+--------------+
-     | Message Type     | Indicates the type of       | 1            |
-     |                  | message                     |              |
-     +------------------+-----------------------------+--------------+
-     | Sender ECC       | Public key of the sending   | 64 (2x32)    |
-     | Public Key       | node                        |              |
-     +------------------+-----------------------------+--------------+
-     | Receiver ECC     | Public key of the receiving | 64 (2x32)    |
-     | Public Key       | node (if applicable)        |              |
-     +------------------+-----------------------------+--------------+
-     | Nonce            | Random number to prevent    | 8            |
-     |                  | replay attacks              |              |
-     +------------------+-----------------------------+--------------+
-     | Encrypted Data   | Content of the message      | Variable     |
-     |                  | encrypted using ECC         |              |
-     +------------------+-----------------------------+--------------+
-     | Signature        | Digital signature of the    | 64           |
-     |                  | sender (ECDSA)              |              |
-     +------------------+-----------------------------+--------------+
+     +============+======================================+===========+
+     | Field      | Description                          | Size      |
+     |            |                                      | (bytes)   |
+     +============+======================================+===========+
+     | Protocol   | Identifies the version of the ECDP   | 1         |
+     | Version    | protocol                             |           |
+     +------------+--------------------------------------+-----------+
+     | Message    | Indicates the type of message        | 1         |
+     | Type       |                                      |           |
+     +------------+--------------------------------------+-----------+
+     | Key Size   | Indicates the ECC key size used      | 2         |
+     |            | (e.g., 192, 224, 256, 384, 521 bits) |           |
+     +------------+--------------------------------------+-----------+
+     | Sender ECC | Public key of the sending node       | Variable  |
+     | Public Key |                                      | (based on |
+     |            |                                      | key size) |
+     +------------+--------------------------------------+-----------+
+     | Receiver   | Public key of the receiving node (if | Variable  |
+     | ECC Public | applicable)                          | (based on |
+     | Key        |                                      | key size) |
+     +------------+--------------------------------------+-----------+
+     | Nonce      | Random number to prevent replay      | 8         |
+     |            | attacks                              |           |
+     +------------+--------------------------------------+-----------+
+     | Encrypted  | Content of the message encrypted     | Variable  |
+     | Data       | using ECC                            |           |
+     +------------+--------------------------------------+-----------+
+     | Signature  | Digital signature of the sender      | Variable  |
+     |            | (ECDSA)                              | (based on |
+     |            |                                      | key size) |
+     +------------+--------------------------------------+-----------+
 
                                   Table 1
 
-5.2.  5.2 Handshake (0x01)
+   In this structure: - *Key Size* is a 2-byte field that indicates the
+   key size in bits (e.g., 192, 224, 256, 384, 521).  This allows both
+   endpoints to use flexible key sizes as per their security
+   requirements.
+
+6.2.  5.2 Handshake (0x01)
 
     +==================+==============================+==============+
     | Field            | Description                  | Size (bytes) |
@@ -173,10 +258,13 @@ Table of Contents
     +------------------+------------------------------+--------------+
     | Message Type     | Set to Handshake (0x01)      | 1            |
     +------------------+------------------------------+--------------+
-    | Sender ECC       | Public key of the sending    | 64 (2x32)    |
+    | Key Size         | Indicates the ECC key size   | 2            |
+    |                  | used                         |              |
+    +------------------+------------------------------+--------------+
+    | Sender ECC       | Public key of the sending    | Variable     |
     | Public Key       | node                         |              |
     +------------------+------------------------------+--------------+
-    | Receiver ECC     | Public key of the receiving  | 64 (2x32)    |
+    | Receiver ECC     | Public key of the receiving  | Variable     |
     | Public Key       | node                         |              |
     +------------------+------------------------------+--------------+
     | Nonce            | Random number to prevent     | 8            |
@@ -188,128 +276,176 @@ Table of Contents
     | Node Capability  | Information about bandwidth  | 4            |
     |                  | and supported data types     |              |
     +------------------+------------------------------+--------------+
-    | Signature        | Digital signature of the     | 64           |
+    | Signature        | Digital signature of the     | Variable     |
     |                  | sender (ECDSA)               |              |
     +------------------+------------------------------+--------------+
 
                                  Table 2
 
-5.3.  5.3 Data Transfer (0x02)
+6.3.  5.3 Data Transfer (0x02)
 
-     +==================+=============================+==============+
-     | Field            | Description                 | Size (bytes) |
-     +==================+=============================+==============+
-     | Protocol Version | Identifies the version of   | 1            |
-     |                  | the ECDP protocol           |              |
-     +------------------+-----------------------------+--------------+
-     | Message Type     | Set to Data Transfer (0x02) | 1            |
-     +------------------+-----------------------------+--------------+
-     | Sender ECC       | Public key of the sending   | 64 (2x32)    |
-     | Public Key       | node                        |              |
-     +------------------+-----------------------------+--------------+
-     | Receiver ECC     | Public key of the receiving | 64 (2x32)    |
-     | Public Key       | node                        |              |
-     +------------------+-----------------------------+--------------+
-     | Nonce            | Exclusive random number for | 8            |
-     |                  | the session                 |              |
-     +------------------+-----------------------------+--------------+
-     | Encrypted Data   | Message content encrypted   | Variable     |
-     |                  | using ECC                   |              |
-     +------------------+-----------------------------+--------------+
-     | Checksum         | Cryptographic hash for data | 32           |
-     |                  | integrity verification      |              |
-     +------------------+-----------------------------+--------------+
-     | Signature        | Digital signature of the    | 64           |
-     |                  | sender (ECDSA)              |              |
-     +------------------+-----------------------------+--------------+
+    +==============+======================================+==========+
+    | Field        | Description                          | Size     |
+    |              |                                      | (bytes)  |
+    +==============+======================================+==========+
+    | Protocol     | Identifies the version of the ECDP   | 1        |
+    | Version      | protocol                             |          |
+    +--------------+--------------------------------------+----------+
+    | Message Type | Set to Data Transfer (0x02)          | 1        |
+    +--------------+--------------------------------------+----------+
+    | Key Size     | Indicates the ECC key size used      | 2        |
+    +--------------+--------------------------------------+----------+
+    | Sender ECC   | Public key of the sending node       | Variable |
+    | Public Key   |                                      |          |
+    +--------------+--------------------------------------+----------+
+    | Receiver ECC | Public key of the receiving node     | Variable |
+    | Public Key   |                                      |          |
+    +--------------+--------------------------------------+----------+
+    | Nonce        | Exclusive random number for the      | 8        |
+    |              | session                              |          |
+    +--------------+--------------------------------------+----------+
+    | Encrypted    | Message content encrypted using ECC  | Variable |
+    | Data         |                                      |          |
+    +--------------+--------------------------------------+----------+
+    | Checksum     | Cryptographic hash (SHA-256 or SHA-  | 32 or 64 |
+    |              | 512) for data integrity verification |          |
+    +--------------+--------------------------------------+----------+
+    | Signature    | Digital signature of the sender      | Variable |
+    |              | (ECDSA)                              |          |
+    +--------------+--------------------------------------+----------+
 
-                                  Table 3
+                                 Table 3
 
-5.4.  5.4 Acknowledgment (Ack) (0x03)
+6.4.  5.4 Acknowledgment (Ack) (0x03)
 
-     +==================+=============================+==============+
-     | Field            | Description                 | Size (bytes) |
-     +==================+=============================+==============+
-     | Protocol Version | Identifies the version of   | 1            |
-     |                  | the ECDP protocol           |              |
-     +------------------+-----------------------------+--------------+
-     | Message Type     | Set to Acknowledgment       | 1            |
-     |                  | (0x03)                      |              |
-     +------------------+-----------------------------+--------------+
-     | Nonce            | Random number corresponding | 8            |
-     |                  | to the session              |              |
-     +------------------+-----------------------------+--------------+
-     | Message Hash     | Hash of the received data   | 32           |
-     |                  | message                     |              |
-     +------------------+-----------------------------+--------------+
-     | Status           | Indicates Success (0x00) or | 1            |
-     |                  | Error (0x01)                |              |
-     +------------------+-----------------------------+--------------+
+    +==================+==============================+==============+
+    | Field            | Description                  | Size (bytes) |
+    +==================+==============================+==============+
+    | Protocol Version | Identifies the version of    | 1            |
+    |                  | the ECDP protocol            |              |
+    +------------------+------------------------------+--------------+
+    | Message Type     | Set to Acknowledgment (0x03) | 1            |
+    +------------------+------------------------------+--------------+
+    | Nonce            | Random number corresponding  | 8            |
+    |                  | to the session               |              |
+    +------------------+------------------------------+--------------+
+    | Message Hash     | Hash of the received data    | 32 or 64     |
+    |                  | message (SHA-256 or SHA-512) |              |
+    +------------------+------------------------------+--------------+
+    | Status           | Indicates Success (0x00) or  | 1            |
+    |                  | Error (0x01)                 |              |
+    +------------------+------------------------------+--------------+
 
-                                  Table 4
+                                 Table 4
 
-5.5.  5.5 Data Request (0x04)
+6.5.  5.5 Data Request (0x04)
 
-       +==================+========================+==============+
-       | Field            | Description            | Size (bytes) |
-       +==================+========================+==============+
-       | Protocol Version | Identifies the version | 1            |
-       |                  | of the ECDP protocol   |              |
-       +------------------+------------------------+--------------+
-       | Message Type     | Set to Data Request    | 1            |
-       |                  | (0x04)                 |              |
-       +------------------+------------------------+--------------+
-       | Sender ECC       | Public key of the      | 64 (2x32)    |
-       | Public Key       | requesting node        |              |
-       +------------------+------------------------+--------------+
-       | Receiver ECC     | Public key of the      | 64 (2x32)    |
-       | Public Key       | data-holding node      |              |
-       +------------------+------------------------+--------------+
-       | Nonce            | Random number for the  | 8            |
-       |                  | session                |              |
-       +------------------+------------------------+--------------+
-       | Data Identifier  | Unique hash or ID of   | 32           |
-       |                  | the requested data     |              |
-       +------------------+------------------------+--------------+
-       | Signature        | Digital signature of   | 64           |
-       |                  | the sender (ECDSA)     |              |
-       +------------------+------------------------+--------------+
+   +==============+====================================+==============+
+   | Field        | Description                        | Size (bytes) |
+   +==============+====================================+==============+
+   | Protocol     | Identifies the version of the ECDP | 1            |
+   | Version      | protocol                           |              |
+   +--------------+------------------------------------+--------------+
+   | Message Type | Set to Data Request (0x04)         | 1            |
+   +--------------+------------------------------------+--------------+
+   | Key Size     | Indicates the ECC key size used    | 2            |
+   +--------------+------------------------------------+--------------+
+   | Sender ECC   | Public key of the requesting node  | Variable     |
+   | Public Key   |                                    |              |
+   +--------------+------------------------------------+--------------+
+   | Receiver ECC | Public key of the data-holding     | Variable     |
+   | Public Key   | node                               |              |
+   +--------------+------------------------------------+--------------+
+   | Nonce        | Random number for the session      | 8            |
+   +--------------+------------------------------------+--------------+
+   | Data         | Unique hash or ID of the requested | 32 or 64     |
+   | Identifier   | data (using SHA-256, SHA-512)      |              |
+   +--------------+------------------------------------+--------------+
+   | Signature    | Digital signature of the sender    | Variable     |
+   |              | (ECDSA)                            |              |
+   +--------------+------------------------------------+--------------+
 
                                  Table 5
 
-6.  Security Considerations
+7.  Security Considerations
 
    ECDP employs ECC for secure communication between nodes, with
-   messages authenticated through ECDSA.  Nonces are used to prevent
-   replay attacks.  The protocol uses the Diffie-Hellman key exchange
-   over elliptic curves for secure session initialization.
+   messages authenticated through ECDSA.  The inclusion of a *Key Size*
+   field allows nodes to negotiate and use varying key lengths based on
+   the curve chosen, ensuring flexibility in security levels.
 
-6.1.  Additional Recommendations
+   Nonces are used to prevent replay attacks.  The protocol uses the
+   Diffie-Hellman key exchange over elliptic curves for secure session
+   initialization.  The following elliptic curves are supported, with
+   corresponding key sizes:
+
+   *  secp192k1 (192-bit)
+
+   *  secp192r1 (192-bit)
+
+   *  secp224k1 (224-bit)
+
+   *  secp224r1 (224-bit)
+
+   *  secp256k1 (256-bit) (*RECOMMENDED*)
+
+   *  secp256r1 (256-bit) (*RECOMMENDED*)
+
+   *  secp384r1 (384-bit) (*RECOMMENDED*)
+
+   *  secp521r1 (521-bit)
+
+7.1.  Additional Recommendations
 
    *  Implementations *SHOULD* regularly update their cryptographic
-      libraries to maintain security.
+      libraries to maintain security against evolving threats.
 
    *  Nodes *MUST* verify the signatures of incoming messages to ensure
       authenticity.
 
+   *  Nonce sizes *MUST* be sufficient (8 bytes at minimum) to prevent
+      replay attacks.
+
    *  It is *RECOMMENDED* that nodes securely store their private keys
-      to prevent unauthorized access.
+      using encryption and protected hardware when possible to prevent
+      unauthorized access.
 
-7.  IANA Considerations
+8.  IANA Considerations
 
-   This document has no actions directed at IANA.
+   This document has no actions directed at IANA at this time.  However,
+   if future protocol updates require additional message types, code
+   points, or other attributes, a registration with IANA *MAY* be
+   required.
 
-8.  Normative References
+9.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
               <https://www.rfc-editor.org/rfc/rfc2119>.
 
+   [RFC4492]  Blake-Wilson, S., Bolyard, N., Gupta, V., Hawk, C., and B.
+              Moeller, "Elliptic Curve Cryptography (ECC) Cipher Suites
+              for Transport Layer Security (TLS)", RFC 4492,
+              DOI 10.17487/RFC4492, May 2006,
+              <https://www.rfc-editor.org/rfc/rfc4492>.
+
+   [RFC5639]  Lochter, M. and J. Merkle, "Elliptic Curve Cryptography
+              (ECC) Brainpool Standard Curves and Curve Generation",
+              RFC 5639, DOI 10.17487/RFC5639, March 2010,
+              <https://www.rfc-editor.org/rfc/rfc5639>.
+
+   [RFC6979]  Pornin, T., "Deterministic Usage of the Digital Signature
+              Algorithm (DSA) and Elliptic Curve Digital Signature
+              Algorithm (ECDSA)", RFC 6979, DOI 10.17487/RFC6979, August
+              2013, <https://www.rfc-editor.org/rfc/rfc6979>.
+
 Acknowledgments
 
    The authors acknowledge the valuable contributions of cryptographic
-   and P2P networking experts.
+   and P2P networking experts.  Special thanks to those who provided
+   feedback on elliptic curve performance and secure key storage
+   recommendations.
 
 Author's Address
 
