@@ -27,8 +27,19 @@ jobs:
       run: |
         # Fetch all the tags
         git fetch --tags
+    
+        # Ensure the main branch is properly set up
+        if git show-ref --verify --quiet refs/heads/main; then
+          echo "Local branch 'main' exists."
+        else
+          echo "Local branch 'main' does not exist. Checking out from origin."
+          git checkout -b main origin/main
+        fi
+    
         # Update origin with all branches, except for the current checked-out branch
         git remote set-branches --add origin '*'
+    
+        # Set upstream branch and pull updates
         git branch --set-upstream-to=origin/main main
         git pull --all
 
