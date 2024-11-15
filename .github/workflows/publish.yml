@@ -29,6 +29,7 @@ jobs:
         git fetch --tags
         # Update origin with all branches, except for the current checked-out branch
         git remote set-branches --add origin '*'
+        git branch --set-upstream-to=origin/main main
         git pull --all
 
     - name: "Setup"
