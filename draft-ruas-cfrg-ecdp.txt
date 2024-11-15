@@ -4,8 +4,8 @@
 
 Crypto Forum                                                     I. Ruas
 Internet-Draft                                                   Nrolabs
-Intended status: Standards Track                         27 October 2024
-Expires: 30 April 2025
+Intended status: Standards Track                        15 November 2024
+Expires: 19 May 2025
 
 
                    ECDP: Elliptic Curve Data Protocol
@@ -56,7 +56,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 April 2025.
+   This Internet-Draft will expire on 19 May 2025.
 
 Copyright Notice
 
